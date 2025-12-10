@@ -1,0 +1,21 @@
+{% extends 'students/base.html' %}
+{% block title %}Курсы{% endblock %}
+{% block content %}
+<h1 class="mb-3">Курсы</h1>
+<div class="row">
+  {% for course in courses %}
+  <div class="col-md-4 mb-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title">{{ course.title }}</h5>
+        <p class="card-text">{{ course.description|truncatechars:150 }}</p>
+        <a href="{% url 'course_detail' course.id %}" class="btn btn-primary">Открыть курс</a>
+      </div>
+      <div class="card-footer text-muted">
+        {{ course.teacher }} • {{ course.duration }} ч
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends 'students/base.html' %}
+{% block title %}📁 Файлы{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>📁 Файлы и документы</h1>
+        <a href="{% url 'upload_document' %}" class="btn btn-primary">📤 Загрузить файл</a>
+    </div>
+
+    {% if documents %}
+    <div class="row">
+        {% for document in documents %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-start mb-2">
+                        <span class="fs-2 me-3">{{ document.get_file_icon }}</span>
+                        <div>
+                            <h5 class="card-title">{{ document.title }}</h5>
+                            <p class="card-text text-muted small">{{ document.description|truncatechars:100 }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="document-info">
+                        <small class="text-muted">
+                            <strong>Тип:</strong> {{ document.get_file_type_display }}<br>
+                            <strong>Курс:</strong> {% if document.course %}{{ document.course.title }}{% else %}Общий{% endif %}<br>
+                            <strong>Размер:</strong> {{ document.get_file_size }}<br>
+                            <strong>Загружен:</strong> {{ document.uploaded_at|date:"d.m.Y H:i" }}
+                        </small>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="btn-group w-100">
+                        <a href="{{ document.file.url }}" class="btn btn-sm btn-outline-success" target="_blank">
+                            📥 Скачать
+                        </a>
+                        <form method="post" action="{% url 'delete_document' document.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить файл?')">
+                                🗑️ Удалить
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <div class="fs-1">📁</div>
+        <h3>Файлы не загружены</h3>
+        <p class="text-muted">Загрузите первый файл, нажав кнопку выше</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,797 @@
+{% extends 'students/base.html' %}
+
+{% block page_title %}🎮 Змейка{% endblock %}
+
+{% block content %}
+<div class="game-container">
+    <div class="game-header text-center mb-4">
+        <h1 class="display-4">🐍 Классическая Змейка</h1>
+        <p class="lead">Собирай яблоки, становись длиннее и ставь рекорды!</p>
+    </div>
+    
+    <div class="row">
+        <!-- Левая колонка - игра -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body p-3">
+                    <div class="text-center mb-3">
+                        <!-- Изменено: добавлен ID для контейнера -->
+                        <div id="canvas-container">
+                            <canvas id="gameCanvas" width="600" height="400">
+                                Ваш браузер не поддерживает Canvas. Обновите браузер.
+                            </canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="game-controls text-center">
+                        <button id="startBtn" class="btn btn-success btn-lg">
+                            <i class="bi bi-play-fill"></i> Старт
+                        </button>
+                        <button id="pauseBtn" class="btn btn-warning btn-lg">
+                            <i class="bi bi-pause-fill"></i> Пауза
+                        </button>
+                        <button id="restartBtn" class="btn btn-secondary btn-lg">
+                            <i class="bi bi-arrow-clockwise"></i> Заново
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Правая колонка - статистика -->
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-bar-chart-fill"></i> Статистика</h4>
+                </div>
+                <div class="card-body">
+                    <div class="stats-grid">
+                        <div class="stat-card bg-success text-white">
+                            <div class="stat-icon">🏆</div>
+                            <div class="stat-info">
+                                <h5>Счет</h5>
+                                <p class="stat-value" id="score">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card bg-info text-white">
+                            <div class="stat-icon">📏</div>
+                            <div class="stat-info">
+                                <h5>Длина</h5>
+                                <p class="stat-value" id="length">3</p>
+                            </div>
+                        </div>
+                        <div class="stat-card bg-warning text-white">
+                            <div class="stat-icon">🍎</div>
+                            <div class="stat-info">
+                                <h5>Яблоки</h5>
+                                <p class="stat-value" id="apples">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card bg-danger text-white">
+                            <div class="stat-icon">⚡</div>
+                            <div class="stat-info">
+                                <h5>Скорость</h5>
+                                <p class="stat-value" id="speed">1</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="bi bi-trophy-fill"></i> Рекорды</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <h2 id="highScore">0</h2>
+                        <p class="text-muted">Лучший результат</p>
+                        <button id="resetHighScore" class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-trash"></i> Сбросить рекорд
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0"><i class="bi bi-keyboard-fill"></i> Управление</h4>
+                </div>
+                <div class="card-body">
+                    <div class="controls-grid">
+                        <div class="control-item"><kbd>↑</kbd> <kbd>W</kbd> Вверх</div>
+                        <div class="control-item"><kbd>↓</kbd> <kbd>S</kbd> Вниз</div>
+                        <div class="control-item"><kbd>←</kbd> <kbd>A</kbd> Влево</div>
+                        <div class="control-item"><kbd>→</kbd> <kbd>D</kbd> Вправо</div>
+                        <div class="control-item"><kbd>Пробел</kbd> Пауза</div>
+                        <div class="control-item"><kbd>ESC</kbd> Перезапуск</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Правила -->
+    <div class="card mt-4">
+        <div class="card-header bg-info text-white">
+            <h4 class="mb-0"><i class="bi bi-info-circle-fill"></i> Правила игры</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="bi bi-check-circle text-success"></i> Управляй змейкой клавишами</li>
+                        <li class="mb-2"><i class="bi bi-check-circle text-success"></i> Собирай красные яблоки 🍎</li>
+                        <li class="mb-2"><i class="bi bi-check-circle text-success"></i> Каждое яблоко = +10 очков</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="bi bi-x-circle text-danger"></i> Не врезайся в стены</li>
+                        <li class="mb-2"><i class="bi bi-x-circle text-danger"></i> Не врезайся в себя</li>
+                        <li class="mb-2"><i class="bi bi-lightning-charge text-warning"></i> С каждым 5-м яблоком скорость растет!</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* СТИЛИ ДЛЯ ИГРЫ */
+.game-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+}
+
+#canvas-container {
+    display: inline-block;
+    border: 3px solid #4CAF50;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #111;
+}
+
+#gameCanvas {
+    display: block; /* Убирает лишнее пространство под canvas */
+    max-width: 100%;
+    height: auto;
+}
+
+.game-controls {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.game-controls button {
+    min-width: 120px;
+    padding: 12px 20px;
+    font-size: 1.1rem;
+}
+
+/* Статистика */
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.stat-card {
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    transition: transform 0.3s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 0;
+}
+
+/* Управление */
+.controls-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.control-item {
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.control-item kbd {
+    background: #333;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin: 0 5px;
+}
+
+/* Сообщения игры */
+.game-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    z-index: 10;
+    min-width: 300px;
+    border: 3px solid #4CAF50;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .stats-grid, .controls-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .game-controls {
+        flex-direction: column;
+    }
+    
+    .game-controls button {
+        width: 100%;
+    }
+    
+    #canvas-container {
+        width: 100%;
+    }
+    
+    #gameCanvas {
+        width: 100% !important;
+        height: 300px !important;
+    }
+}
+</style>
+
+<script>
+// ===== КОНФИГУРАЦИЯ =====
+const config = {
+    cellSize: 20,
+    initialSpeed: 150,  // мс на ход (больше = медленнее)
+    speedIncrease: 10,  // на сколько ускоряется каждые 5 яблок
+    minSpeed: 50,       // минимальная скорость
+    initialLength: 3,
+    applePoints: 10,
+    highScoreKey: 'snakeHighScore'
+};
+
+// ===== ПЕРЕМЕННЫЕ =====
+let canvas, ctx;
+let snake = [];
+let apple = {};
+let direction = 'right';
+let nextDirection = 'right';
+let gameInterval;
+let isPaused = false;
+let isGameOver = false;
+let score = 0;
+let applesCollected = 0;
+let currentSpeed = config.initialSpeed;
+let gameStarted = false;
+let appleEaten = false; // Флаг съедения яблока
+
+// ===== ИНИЦИАЛИЗАЦИЯ =====
+document.addEventListener('DOMContentLoaded', function() {
+    canvas = document.getElementById('gameCanvas');
+    ctx = canvas.getContext('2d');
+    
+    // Загружаем рекорд
+    loadHighScore();
+    
+    // Кнопки
+    document.getElementById('startBtn').addEventListener('click', startGame);
+    document.getElementById('pauseBtn').addEventListener('click', togglePause);
+    document.getElementById('restartBtn').addEventListener('click', resetGame);
+    document.getElementById('resetHighScore').addEventListener('click', resetHighScore);
+    
+    // Управление клавиатурой
+    document.addEventListener('keydown', handleKeyPress);
+    
+    // Начальная отрисовка
+    initGame();
+    draw();
+    
+    // Предупреждение о необходимости старта
+    showMessage('Нажмите "Старт" чтобы начать игру');
+});
+
+// ===== ОСНОВНЫЕ ФУНКЦИИ =====
+function initGame() {
+    // Создаем змейку
+    snake = [];
+    for (let i = config.initialLength - 1; i >= 0; i--) {
+        snake.push({ x: i + 5, y: 10 }); // Начинаем немного правее
+    }
+    
+    // Создаем первое яблоко
+    generateApple();
+    
+    // Сбрасываем статистику
+    score = 0;
+    applesCollected = 0;
+    currentSpeed = config.initialSpeed;
+    direction = 'right';
+    nextDirection = 'right';
+    isGameOver = false;
+    isPaused = false;
+    gameStarted = false;
+    appleEaten = false;
+    
+    // Обновляем статистику
+    updateStats();
+}
+
+function startGame() {
+    if (isGameOver) {
+        resetGame();
+        return;
+    }
+    
+    if (!gameStarted) {
+        gameStarted = true;
+        document.getElementById('startBtn').innerHTML = '<i class="bi bi-play-fill"></i> Продолжить';
+        document.getElementById('startBtn').classList.remove('btn-success');
+        document.getElementById('startBtn').classList.add('btn-primary');
+    }
+    
+    isPaused = false;
+    
+    if (gameInterval) {
+        clearInterval(gameInterval);
+    }
+    
+    gameInterval = setInterval(gameLoop, currentSpeed);
+    hideMessage();
+}
+
+function gameLoop() {
+    if (isPaused || isGameOver) return;
+    
+    // Обновляем направление
+    direction = nextDirection;
+    
+    // Двигаем змейку
+    moveSnake();
+    
+    // Проверяем столкновения
+    if (checkCollision()) {
+        gameOver();
+        return;
+    }
+    
+    // Проверяем, съели ли яблоко
+    if (snake[0].x === apple.x && snake[0].y === apple.y) {
+        eatApple();
+    }
+    
+    // Отрисовываем
+    draw();
+}
+
+function draw() {
+    // Очищаем холст
+    ctx.fillStyle = '#111';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Рисуем сетку
+    drawGrid();
+    
+    // Рисуем змейку
+    snake.forEach((segment, index) => {
+        // Голова зеленее
+        if (index === 0) {
+            ctx.fillStyle = '#4CAF50';
+            ctx.fillRect(
+                segment.x * config.cellSize,
+                segment.y * config.cellSize,
+                config.cellSize,
+                config.cellSize
+            );
+            
+            // Глаза
+            ctx.fillStyle = 'white';
+            let eyeSize = 3;
+            let offset = 5;
+            
+            // Глаза смотрят в направлении движения
+            if (direction === 'right') {
+                ctx.fillRect(segment.x * config.cellSize + config.cellSize - offset, 
+                           segment.y * config.cellSize + offset, eyeSize, eyeSize);
+                ctx.fillRect(segment.x * config.cellSize + config.cellSize - offset, 
+                           segment.y * config.cellSize + config.cellSize - offset - eyeSize, eyeSize, eyeSize);
+            } else if (direction === 'left') {
+                ctx.fillRect(segment.x * config.cellSize + offset, 
+                           segment.y * config.cellSize + offset, eyeSize, eyeSize);
+                ctx.fillRect(segment.x * config.cellSize + offset, 
+                           segment.y * config.cellSize + config.cellSize - offset - eyeSize, eyeSize, eyeSize);
+            } else if (direction === 'up') {
+                ctx.fillRect(segment.x * config.cellSize + offset, 
+                           segment.y * config.cellSize + offset, eyeSize, eyeSize);
+                ctx.fillRect(segment.x * config.cellSize + config.cellSize - offset - eyeSize, 
+                           segment.y * config.cellSize + offset, eyeSize, eyeSize);
+            } else if (direction === 'down') {
+                ctx.fillRect(segment.x * config.cellSize + offset, 
+                           segment.y * config.cellSize + config.cellSize - offset, eyeSize, eyeSize);
+                ctx.fillRect(segment.x * config.cellSize + config.cellSize - offset - eyeSize, 
+                           segment.y * config.cellSize + config.cellSize - offset, eyeSize, eyeSize);
+            }
+        } else {
+            // Тело светлее
+            ctx.fillStyle = '#8BC34A';
+            ctx.fillRect(
+                segment.x * config.cellSize,
+                segment.y * config.cellSize,
+                config.cellSize,
+                config.cellSize
+            );
+            
+            // Градиент для эффекта
+            ctx.fillStyle = '#7CB342';
+            ctx.fillRect(
+                segment.x * config.cellSize,
+                segment.y * config.cellSize,
+                config.cellSize,
+                2
+            );
+        }
+    });
+    
+    // Рисуем яблоко
+    ctx.fillStyle = '#FF5252';
+    ctx.beginPath();
+    ctx.arc(
+        apple.x * config.cellSize + config.cellSize / 2,
+        apple.y * config.cellSize + config.cellSize / 2,
+        config.cellSize / 2,
+        0,
+        Math.PI * 2
+    );
+    ctx.fill();
+    
+    // Стебель яблока
+    ctx.fillStyle = '#8BC34A';
+    ctx.fillRect(
+        apple.x * config.cellSize + config.cellSize / 2 - 1,
+        apple.y * config.cellSize + 2,
+        2,
+        5
+    );
+    
+    // Листик
+    ctx.fillStyle = '#4CAF50';
+    ctx.beginPath();
+    ctx.moveTo(apple.x * config.cellSize + config.cellSize / 2 + 2, apple.y * config.cellSize + 2);
+    ctx.lineTo(apple.x * config.cellSize + config.cellSize / 2 + 8, apple.y * config.cellSize - 2);
+    ctx.lineTo(apple.x * config.cellSize + config.cellSize / 2 + 4, apple.y * config.cellSize + 2);
+    ctx.fill();
+}
+
+function drawGrid() {
+    ctx.strokeStyle = '#222';
+    ctx.lineWidth = 0.5;
+    
+    // Вертикальные линии
+    for (let x = 0; x <= canvas.width; x += config.cellSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+    }
+    
+    // Горизонтальные линии
+    for (let y = 0; y <= canvas.height; y += config.cellSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+    }
+}
+
+function generateApple() {
+    let appleOnSnake;
+    do {
+        appleOnSnake = false;
+        apple = {
+            x: Math.floor(Math.random() * (canvas.width / config.cellSize)),
+            y: Math.floor(Math.random() * (canvas.height / config.cellSize))
+        };
+        
+        // Проверяем, не на змейке ли яблоко
+        for (const segment of snake) {
+            if (segment.x === apple.x && segment.y === apple.y) {
+                appleOnSnake = true;
+                break;
+            }
+        }
+    } while (appleOnSnake);
+}
+
+function moveSnake() {
+    const head = { ...snake[0] };
+    
+    // Двигаем голову
+    switch (direction) {
+        case 'up': head.y--; break;
+        case 'down': head.y++; break;
+        case 'left': head.x--; break;
+        case 'right': head.x++; break;
+    }
+    
+    // Добавляем новую голову
+    snake.unshift(head);
+    
+    // УДАЛЯЕМ ХВОСТ ТОЛЬКО ЕСЛИ НЕ СЪЕЛИ ЯБЛОКО
+    // Это ключевое изменение - змейка должна расти!
+    if (!appleEaten) {
+        snake.pop();
+    } else {
+        // Сбрасываем флаг после того как змейка выросла
+        appleEaten = false;
+    }
+}
+
+function eatApple() {
+    // Устанавливаем флаг, что яблоко съедено
+    appleEaten = true;
+    score += config.applePoints;
+    applesCollected++;
+    
+    // Ускоряем игру каждые 5 яблок
+    if (applesCollected % 5 === 0 && currentSpeed > config.minSpeed) {
+        currentSpeed -= config.speedIncrease;
+        clearInterval(gameInterval);
+        gameInterval = setInterval(gameLoop, currentSpeed);
+    }
+    
+    // Создаем новое яблоко
+    generateApple();
+    
+    // Обновляем статистику
+    updateStats();
+    
+    // Воспроизводим звуковой эффект
+    playAppleSound();
+    
+    // Анимация съедения
+    animateAppleEaten();
+}
+
+function animateAppleEaten() {
+    // Мигание ячейки где было яблоко
+    let blinkCount = 0;
+    const blinkInterval = setInterval(() => {
+        const x = apple.x * config.cellSize;
+        const y = apple.y * config.cellSize;
+        
+        if (blinkCount % 2 === 0) {
+            ctx.fillStyle = '#FFD700';
+        } else {
+            ctx.fillStyle = '#FF5252';
+        }
+        
+        ctx.fillRect(x, y, config.cellSize, config.cellSize);
+        
+        blinkCount++;
+        if (blinkCount > 3) {
+            clearInterval(blinkInterval);
+            // Перерисовываем нормальное состояние
+            draw();
+        }
+    }, 100);
+}
+
+function playAppleSound() {
+    try {
+        // Простой звуковой эффект с использованием Web Audio API
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+        gainNode.gain.value = 0.2;
+        
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.1);
+    } catch (e) {
+        console.log('Звук не поддерживается');
+    }
+}
+
+function checkCollision() {
+    const head = snake[0];
+    
+    // Столкновение со стенами
+    if (head.x < 0 || head.x >= canvas.width / config.cellSize ||
+        head.y < 0 || head.y >= canvas.height / config.cellSize) {
+        return true;
+    }
+    
+    // Столкновение с собой (начинаем с 1, чтобы не проверять голову с головой)
+    for (let i = 1; i < snake.length; i++) {
+        if (head.x === snake[i].x && head.y === snake[i].y) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+function gameOver() {
+    isGameOver = true;
+    clearInterval(gameInterval);
+    
+    // Сохраняем рекорд
+    saveHighScore();
+    
+    // Отображаем сообщение
+    showMessage(
+        `ИГРА ОКОНЧЕНА!<br><br>
+        Счет: <strong>${score}</strong><br>
+        Длина змейки: <strong>${snake.length}</strong><br>
+        Съедено яблок: <strong>${applesCollected}</strong><br><br>
+        Нажмите "Заново" для новой игры`
+    );
+}
+
+function togglePause() {
+    if (!gameStarted || isGameOver) return;
+    
+    isPaused = !isPaused;
+    const pauseBtn = document.getElementById('pauseBtn');
+    
+    if (isPaused) {
+        clearInterval(gameInterval);
+        pauseBtn.innerHTML = '<i class="bi bi-play-fill"></i> Продолжить';
+        pauseBtn.classList.remove('btn-warning');
+        pauseBtn.classList.add('btn-success');
+        
+        showMessage('ПАУЗА<br><br>Нажмите "Продолжить" чтобы возобновить');
+    } else {
+        gameInterval = setInterval(gameLoop, currentSpeed);
+        pauseBtn.innerHTML = '<i class="bi bi-pause-fill"></i> Пауза';
+        pauseBtn.classList.remove('btn-success');
+        pauseBtn.classList.add('btn-warning');
+        hideMessage();
+    }
+}
+
+// ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
+function updateStats() {
+    document.getElementById('score').textContent = score;
+    document.getElementById('length').textContent = snake.length;
+    document.getElementById('apples').textContent = applesCollected;
+    
+    // Вычисляем уровень скорости (1 = начальная, больше = быстрее)
+    const speedLevel = Math.max(1, Math.round((config.initialSpeed - currentSpeed) / config.speedIncrease) + 1);
+    document.getElementById('speed').textContent = speedLevel;
+    
+    document.getElementById('highScore').textContent = localStorage.getItem(config.highScoreKey) || 0;
+}
+
+function handleKeyPress(e) {
+    switch (e.key) {
+        case 'ArrowUp':
+        case 'w':
+        case 'W':
+            if (direction !== 'down') nextDirection = 'up';
+            e.preventDefault();
+            break;
+        case 'ArrowDown':
+        case 's':
+        case 'S':
+            if (direction !== 'up') nextDirection = 'down';
+            e.preventDefault();
+            break;
+        case 'ArrowLeft':
+        case 'a':
+        case 'A':
+            if (direction !== 'right') nextDirection = 'left';
+            e.preventDefault();
+            break;
+        case 'ArrowRight':
+        case 'd':
+        case 'D':
+            if (direction !== 'left') nextDirection = 'right';
+            e.preventDefault();
+            break;
+        case ' ':
+            if (gameStarted) togglePause();
+            e.preventDefault();
+            break;
+        case 'Escape':
+            resetGame();
+            e.preventDefault();
+            break;
+    }
+}
+
+function loadHighScore() {
+    const highScore = localStorage.getItem(config.highScoreKey) || 0;
+    document.getElementById('highScore').textContent = highScore;
+}
+
+function saveHighScore() {
+    const currentHighScore = parseInt(localStorage.getItem(config.highScoreKey) || 0);
+    if (score > currentHighScore) {
+        localStorage.setItem(config.highScoreKey, score);
+        document.getElementById('highScore').textContent = score;
+        
+        // Анимация нового рекорда
+        const highScoreElement = document.getElementById('highScore');
+        highScoreElement.style.color = '#FFD700';
+        highScoreElement.style.transform = 'scale(1.2)';
+        
+        setTimeout(() => {
+            highScoreElement.style.color = '';
+            highScoreElement.style.transform = '';
+        }, 1000);
+    }
+}
+
+function resetGame() {
+    clearInterval(gameInterval);
+    initGame();
+    draw();
+    document.getElementById('startBtn').innerHTML = '<i class="bi bi-play-fill"></i> Старт';
+    document.getElementById('startBtn').classList.remove('btn-primary');
+    document.getElementById('startBtn').classList.add('btn-success');
+    gameStarted = false;
+    hideMessage();
+}
+
+function resetHighScore() {
+    if (confirm('Вы уверены, что хотите сбросить рекорд?')) {
+        localStorage.removeItem(config.highScoreKey);
+        document.getElementById('highScore').textContent = '0';
+    }
+}
+
+// Функции для отображения сообщений
+function showMessage(text) {
+    let messageDiv = document.getElementById('gameMessage');
+    if (!messageDiv) {
+        messageDiv = document.createElement('div');
+        messageDiv.id = 'gameMessage';
+        messageDiv.className = 'game-message';
+        document.getElementById('canvas-container').appendChild(messageDiv);
+    }
+    messageDiv.innerHTML = text;
+    messageDiv.style.display = 'block';
+}
+
+function hideMessage() {
+    const messageDiv = document.getElementById('gameMessage');
+    if (messageDiv) {
+        messageDiv.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

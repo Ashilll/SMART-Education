@@ -1,0 +1,30 @@
+{% extends 'students/base.html' %}
+{% block title %}{{ student.name }}{% endblock %}
+
+{% block content %}
+<h1 class="mb-3">{{ student.name }}</h1>
+<p><strong>Возраст:</strong> {{ student.age }}</p>
+<p><strong>Email:</strong> {{ student.email }}</p>
+
+<hr>
+<h4>Курсы</h4>
+<ul>
+  {% for en in enrollments %}
+    <li>
+      <a href="{% url 'course_detail' en.course.id %}">
+        {{ en.course.title }}
+      </a>
+      {% if en.grade %}
+        — <span class="text-success">Оценка: {{ en.grade.score }}</span>
+      {% endif %}
+    </li>
+  {% empty %}
+    <li>Пока нет курсов</li>
+  {% endfor %}
+</ul>
+{% endblock %}
+{% if student.photo %}
+  <img src="{{ student.photo.url }}" alt="{{ student.name }}" class="student-photo">
+{% else %}
+  <p>Фото не загружено.</p>
+{% endif %}

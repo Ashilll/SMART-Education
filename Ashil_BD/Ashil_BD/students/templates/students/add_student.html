@@ -1,0 +1,12 @@
+{% extends 'students/base.html' %}
+{% block title %}Добавить студента{% endblock %}
+{% block content %}
+<div class="card p-4">
+  <h2>Добавить студента</h2>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-success">Сохранить</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends 'students/base.html' %}
+
+{% block title %}Список студентов{% endblock %}
+
+{% block content %}
+<h1 class="text-center mb-4">Список студентов</h1>
+
+<div class="row">
+    {% for student in students %}
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-4 border-0">
+            <div class="card-body text-center">
+                {% if student.photo %}
+                    <!-- Показываем аватарку, если она есть -->
+                    <img src="{{ student.photo.url }}" class="student-photo rounded-circle mb-3" alt="{{ student.name }}">
+                {% else %}
+                    <!-- Показываем кружок с первой буквой имени, если фото нет -->
+                    <div class="rounded-circle bg-primary text-white d-inline-flex justify-content-center align-items-center mb-3"
+                         style="width: 80px; height: 80px; font-size: 30px;">
+                        {{ student.name|first }}
+                    </div>
+                {% endif %}
+
+                <h5 class="card-title">{{ student.name }}</h5>
+                <p class="card-text">Возраст: {{ student.age }}</p>
+                <p class="card-text text-muted">{{ student.email }}</p>
+                <a href="{% url 'student_detail' student.id %}" class="btn btn-outline-primary w-100">Подробнее</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if students|length == 0 %}
+<p class="text-center text-muted">Нет студентов в базе данных.</p>
+{% endif %}
+{% endblock %}
